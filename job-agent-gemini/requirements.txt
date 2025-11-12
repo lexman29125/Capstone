@@ -1,0 +1,25 @@
+# Streamlit UI
+streamlit==1.28.0
+
+# Gemini LLM
+google-generativeai==0.8.5
+google-ai-generativelanguage==0.6.15
+
+# Async operations
+aiohttp==3.8.5 #3.13.2 installed instead
+
+# Data handling & computation
+numpy==1.26.0
+pandas==2.1.0 #2.3.3 installed instead
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Optional ML / embeddings
+scikit-learn==1.3.2
+
+# Optional pretty printing/logs
+rich==13.6.0
+
+#Note: Gemini SDK pins protobuf>=5, which may conflict with Streamlit. If you encounter errors, pin Streamlit to 1.27.0 or downgrade protobuf:
+#pip install streamlit==1.27.0 protobuf==3.20.3

@@ -1,0 +1,14 @@
+streamlit
+sentence-transformers
+scikit-learn
+pandas
+numpy
+requests
+spacy
+fastapi
+uvicorn
+mcp
+google-adk
+PyPDF2
+python-docx
+aiohttp
