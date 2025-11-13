@@ -81,33 +81,33 @@ class CoordinatorAgent(Agent):
         self.sub_agents = sub_agents if sub_agents is not None else []
 
     async def run_live(self, query: str, candidate_profile: dict):
-        yield f"🚀 CoordinatorAgent '{self.name}' initiating job search for '{query}' and application process for candidate '{candidate_profile.get('name')}'..."
+        yield f"CoordinatorAgent '{self.name}' initiating job search for '{query}' and application process for candidate '{candidate_profile.get('name')}'..."
 
         # 2a. Find the job_search_agent
         job_search_agent_found = next((agent for agent in self.sub_agents if agent.name == "job_search_agent"), None)
         if not job_search_agent_found:
-            yield "❌ Error: job_search_agent not found."
+            yield "Error: job_search_agent not found."
             return
         job_search_tool_instance = next((tool for tool in job_search_agent_found.tools if tool.name == "job_search"), None)
         if not job_search_tool_instance:
-            yield "❌ Error: job_search tool not found for job_search_agent."
+            yield "Error: job_search tool not found for job_search_agent."
             return
 
         # 2b. Simulate job_search_agent using its job_search_tool with error handling
-        yield f"⚙️ Delegating job search to {job_search_agent_found.name}..."
+        yield f"Delegating job search to {job_search_agent_found.name}..."
         jobs = []
         try:
             jobs = job_search_tool_instance.func(query, max_results=5) # Increased max_results to have more options
         except Exception as e:
-            yield f"❌ Error during job search: {e}"
+            yield f"Error during job search: {e}"
             return
 
         # 2c. Yield message about jobs found
-        yield f"🔎 Job search complete. Found {len(jobs)} jobs:" \
-              + "\n" + "\n".join([f"- 💼 {job['title']} at {job['company']} (Salary: {job.get('salary', 'N/A')})" for job in jobs])
+        yield f"Job search complete. Found {len(jobs)} jobs:" \
+              + "\n" + "\n".join([f"- {job['title']} at {job['company']} (Salary: {job.get('salary', 'N/A')})" for job in jobs])
 
         if not jobs:
-            yield "⚠️ No jobs found, unable to apply."
+            yield "No jobs found, unable to apply."
             return
 
         # 2d. Enhanced Job Selection Logic
@@ -143,11 +143,11 @@ class CoordinatorAgent(Agent):
         selected_job = None
         if scored_jobs and scored_jobs[0][0] > 0: # If at least one job has a positive score
             selected_job = scored_jobs[0][1]
-            yield f"✅ Selected job based on skills and salary expectations: '{selected_job['title']}' at '{selected_job['company']}' (Score: {scored_jobs[0][0]})."
+            yield f"Selected job based on skills and salary expectations: '{selected_job['title']}' at '{selected_job['company']}' (Score: {scored_jobs[0][0]})."
         else: # Fallback if no job scores positively or scored_jobs is empty
             # Original fallback logic: try to find a 'Senior Engineer' job or take the first one
             selected_job = next((job for job in jobs if "Senior Engineer" in job['title']), jobs[0])
-            yield f"⚠️ No jobs matched criteria strongly. Falling back to default selection: '{selected_job['title']}' at '{selected_job['company']}' (Score: 0)."
+            yield f"No jobs matched criteria strongly. Falling back to default selection: '{selected_job['title']}' at '{selected_job['company']}' (Score: 0)."
 
         # Assign a dummy job_id for demonstration
         job_id = f"JOB-{random.randint(1000, 9999)}"
@@ -155,24 +155,24 @@ class CoordinatorAgent(Agent):
         # 2e. Find the candidate_agent
         candidate_agent_found = next((agent for agent in self.sub_agents if agent.name == "candidate_agent"), None)
         if not candidate_agent_found:
-            yield "❌ Error: candidate_agent not found."
+            yield "Error: candidate_agent not found."
             return
         submit_application_tool_instance = next((tool for tool in candidate_agent_found.tools if tool.name == "submit_application"), None)
         if not submit_application_tool_instance:
-            yield "❌ Error: submit_application tool not found for candidate_agent."
+            yield "Error: submit_application tool not found for candidate_agent."
             return
 
         # 2f. Simulate candidate_agent using its submit_application_tool with error handling
-        yield f"📬 Delegating application submission to {candidate_agent_found.name} for job ID {job_id}..."
+        yield f"Delegating application submission to {candidate_agent_found.name} for job ID {job_id}..."
         application_status = {}
         try:
             application_status = submit_application_tool_instance.func(job_id, candidate_profile)
         except Exception as e:
-            yield f"❌ Error during application submission: {e}"
+            yield f"Error during application submission: {e}"
             return
 
         # 2g. Yield application submission status
-        yield f"🎉 Application submission status: {application_status.get('status', 'unknown')}. Message: {application_status.get('message', 'An unknown error occurred.')}"
+        yield f"Application submission status: {application_status.get('status', 'unknown')}. Message: {application_status.get('message', 'An unknown error occurred.')}"
 
 
 # Re-instantiate the CoordinatorAgent with the new class definition
@@ -199,8 +199,8 @@ def run_streamlit_app():
         submit_button = st.form_submit_button(label='Submit Application')
 
         if submit_button:
-            if not name or not email or not skills_input:
-                st.error("Name, Email, and Skills are required fields.")
+            if not name or not email or not skills_input or not job_query:
+                st.error("Name, Email, Skills, and Desired Job Title are required fields.")
                 return
 
             # Parse skills input
@@ -216,18 +216,18 @@ def run_streamlit_app():
             }
             # job_query is now dynamic from user input
 
-            st.subheader("✨ Starting Job Search...")
+            st.subheader("\n--- Starting the multi-agent workflow ---")
             progress_messages = []
 
             # Use a placeholder for live updates, if possible, or collect messages
             status_placeholder = st.empty()
-            
+
             try:
                 # asyncio.run() needs to be called within an event loop. nest_asyncio handles this.
                 # The run_live method is an async generator, so we need to iterate over it.
                 # We run it in a new event loop if necessary or in the existing one.
                 # For Streamlit, using create_task and a loop is generally safer for responsiveness.
-                
+
                 async def run_workflow_and_display():
                     nonlocal progress_messages # Allow modification of progress_messages from outer scope
                     async for step_output in root_agent.run_live(job_query, candidate_profile):
@@ -242,7 +242,7 @@ def run_streamlit_app():
                 if loop.is_running():
                     st.write("Scheduling workflow as a background task...")
                     # In a real Streamlit app, you might want to manage the task more explicitly
-                    # or ensure the UI can update while async tasks run. 
+                    # or ensure the UI can update while async tasks run.
                     # For this demonstration, we let it run and update the placeholder.
                     # We cannot await directly here as it would block the Streamlit thread.
                     # The placeholder will update as messages arrive.
@@ -251,8 +251,6 @@ def run_streamlit_app():
 
             except Exception as e:
                 st.error(f"An error occurred during workflow execution: {e}")
-            
-            st.subheader("🎉 Congratulations, you have successfully applied for matched jobs!")
 
-# This line ensures the Streamlit app runs when the script is executed by Streamlit
+            st.subheader("--- Multi-agent workflow finished ---")
 run_streamlit_app()
