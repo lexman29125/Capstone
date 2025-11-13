@@ -814,3 +814,314 @@ Provide me the full code by filename, ready to copy and paste into my vscode to 
 The application will open in your browser, and you can test complex queries like "Find a Senior Software Engineer job in London and submit my application."
 
 The video below gives an overview of how to build an AI agent interface with Streamlit, which directly relates to the structure we've implemented. [Building an Intelligent Multi-Tool AI Agent Interface Using Streamlit for Seamless Real-Time Interaction](https://www.google.com/search?q=https://www.youtube.com/watch%3Fv%3DFjIu29QWl-0) This video is relevant as it provides a visual context for the Streamlit-LangChain integration used in the prototype.
+
+```
+Looks like there are deployment issues using Langchain as there are many deprecated functions. Suggest a more stable tool, consider using google adk
+```
+That's a very common pain point with fast-moving open-source frameworks like LangChain. The best and most stable tool for building agents in the Google ecosystem is the **Google Agent Development Kit (ADK)**.
+
+ADK is a **code-first, open-source Python framework** developed by Google, specifically designed for stability and integration with Gemini and Google Cloud services.
+
+---
+
+## 🚀 Recommended Tool: Google Agent Development Kit (ADK)
+
+The Google ADK is the direct evolution of Google's internal agent development framework, providing a much more structured and production-ready environment than the constantly changing abstractions found in community-driven frameworks.
+
+### Why ADK is More Stable and Better for Google AI
+
+| Feature | Google ADK | LangChain (General OSS) |
+| :--- | :--- | :--- |
+| **Code Stability** | **High.** It has a bi-weekly release cadence and a stable branch (`pip install google-adk`), reducing breaking changes common in rapid OSS development. | **Moderate.** Extremely fast-moving, leading to frequent deprecation warnings and API changes, requiring constant code updates. |
+| **Model Integration** | **Native & Optimized.** Built specifically for **Gemini** and Vertex AI, ensuring immediate support for features like enhanced Function Calling and advanced safety controls. | **Abstracted.** Connects via a generic wrapper (`langchain-google-genai`), which can sometimes lag behind native Gemini features. |
+| **Multi-Agent Design** | **First-Class Support.** Provides built-in constructs like `SequentialAgent`, `ParallelAgent`, and an `Orchestrator` to manage complex flows, often simplifying the need for complex graph libraries. | Requires an additional layer like LangGraph or CrewAI to achieve robust multi-agent coordination. |
+| **Deployment** | **"Deploy Anywhere."** Optimized for containerization and one-click scaling on Google Cloud services like **Vertex AI Agent Engine** or Cloud Run. | Requires manual configuration of containers, MLOps tooling, and integration with cloud-native features. |
+| **Observability** | **Built-in.** Includes rich tracing, logging, and observability tools out-of-the-box, essential for debugging agent decisions in production. | Requires manual integration with third-party tools (e.g., LangSmith, Weights & Biases). |
+
+---
+
+## 🗺️ Migration Plan: From LangChain to ADK
+
+Migrating your prototype's core logic to ADK will give you a cleaner, more robust structure, while still using the familiar concept of Tools (Functions).
+
+### 1. Separate the Agent Components
+
+Your current architecture already separates the logic well, which is perfect for ADK:
+
+* **`app.py` (UI):** Stays mostly the same (Streamlit frontend).
+* **`requirements.txt`:** Remove LangChain and add `google-adk`.
+* **`agent_core.py` (Logic):** This is where the core changes occur. You'll switch from the LangChain `AgentExecutor` to defining an **ADK Agent** and its **Tools**.
+
+### 2. Conceptual Code Transformation (ADK)
+
+In ADK, you define the tools and the agent class directly.
+
+| LangChain Prototype Concept | Google ADK Implementation |
+| :--- | :--- |
+| `@tool` decorator | The `@tool` decorator in ADK (or a simple Python function wrapped as a Tool) |
+| `ChatGoogleGenerativeAI` | Configured directly in the ADK Agent, which is optimized for Gemini. |
+| `agent_executor.invoke()` | Calling the ADK Agent's `.query()` method. |
+
+This migration will give you a **stable, code-first foundation** that is ready for enterprise-grade deployment on Google Cloud when you are ready to scale.
+
+```
+Provide updated full code and dependencies ready to deploy, include deployment steps.
+```
+You're absolutely right to prioritize stability and look towards the **Google Agent Development Kit (ADK)** for a production-ready solution. ADK provides native, stable integration with Gemini and is designed for easy deployment to Google Cloud Run.
+
+This solution uses the **ADK's `LlmAgent` with tools** to replicate the Coordinator $\rightarrow$ Tool workflow, which is the most robust starting point for an ADK-based agent.
+
+-----
+
+## 📁 Project Structure: ADK Standard
+
+For ADK, the standard project structure requires a dedicated folder for your agent's core logic.
+
+```
+job-chatbot-adk/
+├── job_agent/                  # The agent directory (becomes an ADK package)
+│   ├── __init__.py             # Makes the directory a Python package
+│   └── agent.py                # Contains the Agent definition and Tools
+├── .env                        # Local environment variables (API Key)
+├── requirements.txt            # Python dependencies
+└── app.py                      # Streamlit UI (Frontend)
+```
+
+-----
+
+## 1\. `requirements.txt`
+
+This file lists the necessary packages. Note the shift from LangChain to `google-adk` and the removal of `langchain-google-genai`.
+
+```txt
+streamlit
+google-adk
+python-dotenv
+```
+
+-----
+
+## 2\. `job_agent/agent.py`
+
+This file defines the **ADK Agent** and its custom tools (functions).
+
+```python
+from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
+from google.adk.tools import tool
+from typing import Dict, Any
+
+# Define the model to be used by the agent
+# LiteLlm is a flexible wrapper that handles environment-based auth (e.g., GEMINI_API_KEY)
+# In a full Vertex AI deployment, this would use a VertexAILlm class.
+model = LiteLlm("gemini-2.5-flash")
+
+# --- Tool Definitions (Functions) ---
+
+@tool
+def job_search(query: str, location: str) -> Dict[str, Any]:
+    """
+    Searches the mock job database for relevant job postings.
+    Returns a dictionary with a list of matching job IDs and titles. Use this FIRST for finding jobs.
+    """
+    if "senior software engineer" in query.lower() and "london" in location.lower():
+        return {
+            "status": "success",
+            "jobs": [
+                {"id": 101, "title": "Senior S/W Eng, TechCorp"},
+                {"id": 102, "title": "Lead Dev, Global Systems"}
+            ],
+            "message": "Found 2 matching senior roles in London. Please ask the user which ID to apply for."
+        }
+    else:
+        return {"status": "success", "jobs": [], "message": f"Found 1 general job matching '{query}' in {location}: JobID 99."}
+
+@tool
+def submit_application(job_id: int, user_id: str) -> Dict[str, Any]:
+    """
+    Submits the application for the specified job ID using the candidate's profile.
+    This simulates the Candidate Agent's final action. ONLY call this after a job_id is known.
+    """
+    if job_id in [101, 102]:
+        return {"status": "submitted", "message": f"Application for JobID {job_id} submitted successfully for candidate {user_id}. A proactive follow-up reminder has been set."}
+    else:
+        return {"status": "error", "message": f"JobID {job_id} not found or application failed."}
+
+# --- Coordinator Agent Definition ---
+
+root_agent = Agent(
+    model=model,
+    name="JobChatbotCoordinator",
+    description="An expert coordinator for job search and application.",
+    instruction=(
+        "You are the **Job Chatbot Coordinator Agent**. Your goal is to fulfill complex user requests "
+        "by intelligently calling the appropriate tools. Analyze the user request, plan the necessary steps "
+        "(Search, Apply), and use the output from the tools to provide a final, helpful response. "
+        "The user ID is always 'User_A'. Always use the tools when appropriate."
+    ),
+    tools=[job_search, submit_application] # Register the tools here
+)
+
+# You must define an agent instance named 'root_agent' for ADK to find it.
+# In a SequentialAgent scenario, root_agent would be the SequentialAgent instance.
+```
+
+-----
+
+## 3\. `job_agent/__init__.py`
+
+This file can be empty, but must exist to define the `job_agent` directory as a Python package.
+
+```python
+# Leave this file empty
+```
+
+-----
+
+## 4\. `app.py`
+
+This Streamlit UI now imports and uses the ADK agent via the ADK's `Runner` component, which manages the session.
+
+```python
+import streamlit as st
+from dotenv import load_dotenv
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from job_agent.agent import root_agent # Import the ADK agent
+
+# Load API key from .env file for local development
+load_dotenv()
+
+# --- ADK Setup ---
+
+# Initialize the Runner, which handles agent execution and state
+@st.cache_resource
+def initialize_runner():
+    # Use InMemorySessionService for the prototype; use a database for production
+    session_service = InMemorySessionService()
+    runner = Runner(
+        agent=root_agent,
+        app_name="job_chatbot_adk_app",
+        session_service=session_service
+    )
+    return runner
+
+# --- Streamlit Application Setup ---
+
+st.set_page_config(page_title="🤖 ADK Job Chatbot Prototype", layout="centered")
+st.title("🤖 ADK Job Chatbot Prototype")
+
+# Initialize chat history and session IDs
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Hello! I'm your stable ADK Job Agent. How can I help you today?"}
+    ]
+if "session_id" not in st.session_state:
+    # Use a fixed ID for the prototype
+    st.session_state.session_id = "streamlit_session_1"
+if "user_id" not in st.session_state:
+    st.session_state.user_id = "User_A"
+
+# Display chat messages from history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Get the Runner instance
+adk_runner = initialize_runner()
+
+# Handle user input
+if prompt := st.chat_input("Find a Senior Software Engineer job in London..."):
+    # 1. Add user message to history and display it
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # 2. Run the ADK Agent asynchronously
+    with st.chat_message("assistant"):
+        with st.spinner("ADK Agent is processing..."):
+            
+            # ADK uses async streams, but we wrap it for the Streamlit synchronous execution
+            import asyncio
+            
+            async def stream_agent_response():
+                full_response = ""
+                # Use async_stream_query to interact with the agent
+                async for event in adk_runner.async_stream_query(
+                    user_id=st.session_state.user_id,
+                    session_id=st.session_state.session_id,
+                    message=prompt
+                ):
+                    # ADK returns events; we look for the final text response
+                    if event.final_response and event.final_response.text_response:
+                        return event.final_response.text_response
+                return "The agent returned no final response."
+
+            # Execute the async function using asyncio
+            try:
+                final_response = asyncio.run(stream_agent_response())
+            except Exception as e:
+                final_response = f"An error occurred during agent execution: {e}"
+
+            st.markdown(final_response)
+
+    # 3. Add assistant response to history
+    st.session_state.messages.append({"role": "assistant", "content": final_response})
+```
+
+-----
+
+## 5\. Deployment Steps: Local & Cloud Run
+
+### Phase 1: Local Execution
+
+1.  **Setup Environment:**
+    ```bash
+    # Create project directory
+    mkdir job-chatbot-adk
+    cd job-chatbot-adk
+
+    # Create the agent folder
+    mkdir job_agent
+
+    # Create .env (for local testing only)
+    echo 'GEMINI_API_KEY="YOUR_API_KEY_HERE"' > .env
+
+    # Install dependencies
+    pip install -r requirements.txt
+    ```
+2.  **Copy Code:** Copy the code snippets into their respective files.
+3.  **Run Streamlit:**
+    ```bash
+    streamlit run app.py
+    ```
+
+### Phase 2: Cloud Run Deployment (Recommended for ADK)
+
+For a production-ready, scalable deployment, **Google Cloud Run** is the optimal choice for ADK agents, and ADK provides a dedicated CLI tool.
+
+1.  **Install Google Cloud CLI (gcloud):** Ensure you have gcloud installed and authenticated (`gcloud auth login`).
+2.  **Containerize (Optional but good practice):** Create a minimal `Dockerfile` to package your app.
+3.  **Use `adk deploy` (Recommended):** The ADK command-line interface is designed to automate this process.
+
+Assuming your agent folder is structured as above (`job_agent/`):
+
+```bash
+# Set your environment variables in the terminal
+export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
+export GOOGLE_CLOUD_LOCATION="us-central1" # Or another region
+
+# Deploy the agent using the ADK CLI command
+# The `--with_ui` flag deploys the built-in ADK Web UI for testing!
+adk deploy cloud_run \
+    --project=$GOOGLE_CLOUD_PROJECT \
+    --region=$GOOGLE_CLOUD_LOCATION \
+    --app_name="job_chatbot" \
+    --agent_path="./job_agent" \
+    --with_ui
+```
+
+*Alternatively, if you must use the Streamlit UI on Cloud Run, you would deploy the `app.py` script as a standard Streamlit app using a custom Dockerfile.*
+
+This video demonstrates how to transition your ADK agent to a scalable service on Cloud Run. [Deploy ADK Agent to Cloud Run | Google Cloud ADK Tutorial](https://www.youtube.com/watch?v=zA0Y3smlavA)
+http://googleusercontent.com/youtube_content/2
