@@ -2,6 +2,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.v1.messages import Query # <-- Using the versioned submodule path
 from job_agent.agent import root_agent # Import the ADK agent
 
 # Load API key from .env file for local development
@@ -55,15 +56,17 @@ if prompt := st.chat_input("Find a Senior Software Engineer job in London..."):
         with st.spinner("ADK Agent is processing..."):
             
             try:
-                # FIXED: Passing prompt as the third positional argument (user_id, session_id, prompt)
-                response_event = adk_runner.run(
-                    st.session_state.user_id,
-                    st.session_state.session_id,
-                    prompt
+                # 3. Create the single Query object
+                query_object = Query(
+                    user_id=st.session_state.user_id,
+                    session_id=st.session_state.session_id,
+                    text=prompt # Using 'text', the standard field name in ADK Query objects
                 )
+
+                # 4. Pass the single Query object to run()
+                response_event = adk_runner.run(query_object)
                 
                 # Extract the final text response from the event object
-                # We check for the final_response field and then the text_response part
                 final_response = response_event.final_response.text_response
                 
             except Exception as e:
@@ -72,5 +75,5 @@ if prompt := st.chat_input("Find a Senior Software Engineer job in London..."):
 
             st.markdown(final_response)
 
-    # 3. Add assistant response to history
+    # 5. Add assistant response to history
     st.session_state.messages.append({"role": "assistant", "content": final_response})

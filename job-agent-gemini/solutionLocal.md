@@ -134,6 +134,18 @@ Start with the **LangChain/CrewAI + Gemini API** approach for the fastest, lowes
 ```
 Would you like me to provide a simple Python code structure for the LangChain/CrewAI prototype?
 ```
+## Code Generation Prompt
+```
+Task 1:
+Create a multi-agent system by defining a job_search_agent and a candidate_agent with their respective tools (job_search and submit_application). Then, update the root_agent to act as a coordinator for these specialized agents, and demonstrate its workflow by correctly entering query "Find and Apply for a Senior Engineer Role" task and iterating through its output.
+
+Task 2:
+1. Enhance Job Selection Logic: Implement more sophisticated job selection criteria within the Coordinator Agent, such as matching job requirements with candidate skills or salary expectations, instead of just picking the first relevant job or the first job found. 
+2. Implement Robust Error Handling: Add more detailed error handling and retry mechanisms for tool calls (e.g., if a job search fails or an application submission encounters an issue), allowing the Coordinator Agent to adapt or report specific failures to the user.
+
+Task 3:
+Next build a frontend web UI to allow user to interact by entering his /her details via a form
+```
 
 Great. Here is a simple Python code structure using **LangChain** and the **Gemini API** to simulate your Coordinator $\rightarrow$ Search $\rightarrow$ Candidate multi-agent workflow.
 
