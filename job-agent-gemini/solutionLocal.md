@@ -145,6 +145,15 @@ Task 2:
 
 Task 3:
 Next build a frontend web UI to allow user to interact by entering his /her details via a form
+
+Task 4:
+Improve the coordinator agent to use LLM for reasoning. Use Gemini 2.5 flash model
+
+Task 5:
+Replace mock-up functions with real functions. Job Search to use google search, Candidate Profiling, Resume Skills analysis, Skills and Salary Match Score, Job Application and email notification remains mock
+
+Task 6:
+Live Interactive Chat for user feedback on Job search results, ask user preference on which job to apply by presenting Match Score
 ```
 
 Great. Here is a simple Python code structure using **LangChain** and the **Gemini API** to simulate your Coordinator $\rightarrow$ Search $\rightarrow$ Candidate multi-agent workflow.
