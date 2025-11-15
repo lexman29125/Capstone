@@ -1157,3 +1157,7 @@ Refer to exported Colab notebooks for the documented "Tasks" that are result of 
 ```
 The streamlit app.py works. As next step, beautify the UI. 1. Use CSS 2. Add Professional Header: <h1 style='text-align: center; color: #4CAF50;'> 🔍 AI Job Search Assistant </h1> <p style='text-align:center; font-size:18px;'> Discover tailored job recommendations powered by Agentic AI. </p> 3. Use Streamlit Themes (Built-In), use .streamlit/config.toml: [theme] primaryColor="#4CAF50" backgroundColor="#F8F9FA" secondaryBackgroundColor="#FFFFFF" textColor="#333333" font="sans serif" 4. Add Animated Loaders (Spinners / Progress Bars) 5. card UI for job results: st.markdown(""" <div style=" border:1px solid #ddd; padding:20px; border-radius:10px; margin-bottom:10px; background:white;"> <h3>Data Scientist</h3> <p>Company: Google</p> <a href="https://example.com">View Job</a> </div> """, unsafe_allow_html=True) 6. Ready to deploy to HuggingFace Spaces
 ```
+### Working Code and Documentation
+```
+https://github.com/lexman29125/Capstone/tree/main/job-agent-gemini/ADK_Colab/V5_OpenaiLLM
+```
