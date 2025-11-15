@@ -196,14 +196,58 @@ class CoordinatorAgent(Agent):
             analysis_result = analysis_tool_instance.func(resume_text, job_description_text)
             if analysis_result.get('analysis_status') == 'success':
                 yield f"✅ Analysis complete: {analysis_result.get('message', 'No message provided.')}"
-                yield "--- LLM Analysis Report (JSON) ---"
+                yield "<h2>Analysis Report</h2>" # Moved here to display after initial messages
+
                 parsed_report = analysis_result.get('parsed_report', {})
-                for key, value in parsed_report.items():
-                    if isinstance(value, list):
-                        yield f"\n**{key.replace('_', ' ').title()}**:\n  - " + "\n  - ".join(value)
-                    else:
-                        yield f"\n**{key.replace('_', ' ').title()}**: {value}"
-                yield "-----------------------------------"
+
+                report_html_parts = []
+
+                # Overall Fit Summary
+                overall_fit_summary = parsed_report.get('overall_fit_summary', 'N/A')
+                report_html_parts.append(f"<p><b>Overall Fit Summary:</b> {overall_fit_summary}</p>")
+
+                # Candidate Skills
+                candidate_skills = parsed_report.get('candidate_skills', [])
+                if candidate_skills:
+                    report_html_parts.append("<h4>Candidate Skills:</h4><ul>")
+                    for skill in candidate_skills:
+                        report_html_parts.append(f"<li>{skill}</li>")
+                    report_html_parts.append("</ul>")
+
+                # Required Job Skills
+                required_job_skills = parsed_report.get('required_job_skills', [])
+                if required_job_skills:
+                    report_html_parts.append("<h4>Required Job Skills:</h4><ul>")
+                    for skill in required_job_skills:
+                        report_html_parts.append(f"<li>{skill}</li>")
+                    report_html_parts.append("</ul>")
+
+                # Matched Skills
+                matched_skills = parsed_report.get('matched_skills', [])
+                if matched_skills:
+                    report_html_parts.append("<h4>Matched Skills:</h4><ul>")
+                    for skill in matched_skills:
+                        report_html_parts.append(f"<li>{skill}</li>")
+                    report_html_parts.append("</ul>")
+
+                # Missing Skills
+                missing_skills = parsed_report.get('missing_skills', [])
+                if missing_skills:
+                    report_html_parts.append("<h4 style=\"color:red;\">Missing Skills (Gaps):</h4><ul>")
+                    for skill in missing_skills:
+                        report_html_parts.append(f"<li style=\"color:red;\">{skill}</li>")
+                    report_html_parts.append("</ul>")
+
+                # Additional Skills
+                additional_skills = parsed_report.get('additional_skills', [])
+                if additional_skills:
+                    report_html_parts.append("<h4>Additional Skills:</h4><ul>")
+                    for skill in additional_skills:
+                        report_html_parts.append(f"<li>{skill}</li>")
+                    report_html_parts.append("</ul>")
+
+                yield "\n".join(report_html_parts) # Yield the complete HTML string
+
             else:
                 yield f"❌ Analysis failed: {analysis_result.get('message', 'Unknown error.')}"
                 if 'raw_report' in analysis_result:
@@ -227,7 +271,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-st.title("AI-Powered Resume and Job Description Analyzer")
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'> 🔍 AI Job Search Assistant </h1> <p style='text-align:center; font-size:18px;'> Discover tailored job recommendations powered by Agentic AI. </p>", unsafe_allow_html=True)
 st.sidebar.header("User Inputs")
 
 job_url_input = st.sidebar.text_input(
@@ -277,7 +321,7 @@ if st.sidebar.button("Run Analysis", disabled=(not is_valid_job_url or not is_re
                 job_description_text = ""
 
         if resume_text and job_description_text:
-            st.subheader("Analysis Report")
+            # st.subheader("Analysis Report") # Removed this line
             progress_bar = st.progress(0)
             status_text = st.empty()
             report_container = st.empty()
@@ -301,7 +345,7 @@ if st.sidebar.button("Run Analysis", disabled=(not is_valid_job_url or not is_re
 
             progress_bar.empty()
             status_text.empty()
-            report_container.markdown("\n".join(full_report_lines))
+            report_container.markdown("\n".join(full_report_lines), unsafe_allow_html=True)
 
         else:
             st.error("Analysis cannot be performed due to missing resume text or job description text.")
