@@ -1146,3 +1146,14 @@ adk deploy cloud_run \
 
 This video demonstrates how to transition your ADK agent to a scalable service on Cloud Run. [Deploy ADK Agent to Cloud Run | Google Cloud ADK Tutorial](https://www.youtube.com/watch?v=zA0Y3smlavA)
 http://googleusercontent.com/youtube_content/2
+
+## Use Google Colob to Develop Code using Vibe Engineering
+```
+Design the logic, define the module i.e. Agents, Tools, Functions. Breakdown to goals for each module.
+Refer to exported Colab notebooks for the documented "Tasks" that are result of plans derived from prompts. Code is developed, debuged and tested automatically with results captured.
+```
+
+### Prompt:
+```
+The streamlit app.py works. As next step, beautify the UI. 1. Use CSS 2. Add Professional Header: <h1 style='text-align: center; color: #4CAF50;'> 🔍 AI Job Search Assistant </h1> <p style='text-align:center; font-size:18px;'> Discover tailored job recommendations powered by Agentic AI. </p> 3. Use Streamlit Themes (Built-In), use .streamlit/config.toml: [theme] primaryColor="#4CAF50" backgroundColor="#F8F9FA" secondaryBackgroundColor="#FFFFFF" textColor="#333333" font="sans serif" 4. Add Animated Loaders (Spinners / Progress Bars) 5. card UI for job results: st.markdown(""" <div style=" border:1px solid #ddd; padding:20px; border-radius:10px; margin-bottom:10px; background:white;"> <h3>Data Scientist</h3> <p>Company: Google</p> <a href="https://example.com">View Job</a> </div> """, unsafe_allow_html=True) 6. Ready to deploy to HuggingFace Spaces
+```
